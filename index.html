@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Hope Home 🌈</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div id="login-overlay" class="modal" style="display:flex;">
+        <div class="modal-content bubble-shadow login-box">
+            <h1 class="bubbly-title">The Hope Home</h1>
+            <p class="bubbly-sub">Who's Magic Today? ✨</p>
+            <div class="login-grid">
+                <button class="login-btn btn-sarah" onclick="selectUser('Sarah', '👑')">Sarah 👑</button>
+                <button class="login-btn btn-shawn" onclick="selectUser('Shawn', '🛠️')">Shawn 🛠️</button>
+                <button class="login-btn btn-summer" onclick="selectUser('Summer', '☀️')">Summer ☀️</button>
+                <button class="login-btn btn-kirsten" onclick="selectUser('Kirsten', '🎨')">Kirsten 🎨</button>
+                <button class="login-btn btn-hailey" onclick="selectUser('Hailey', '🦄')">Hailey 🦄</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" style="display:none;">
+        <div class="user-bar bubble-shadow" onclick="logout()">
+            <label>✨ Hero: <strong id="active-user-display">None</strong></label>
+        </div>
+
+        <div id="home-view">
+            <header class="hero-header">
+                <h1 class="bubbly-main-title">The Hope Home</h1>
+                <button class="btn-stats-hero" onclick="showStats()">🏆 HALL OF FAME & TRENDS</button>
+            </header>
+
+            <div class="global-quest-bubble bubble-shadow">
+                <h3 class="zone-bubble-title">Global Quest Mode 🚀</h3>
+                <div class="global-input-row">
+                    <input type="text" id="global-keyword" placeholder="Search tasks: Sweep, Trash...">
+                    <button class="power-btn" onclick="searchGlobalQuest()">SEARCH</button>
+                </div>
+                <div id="global-search-results" class="compact-grid" style="margin-top:20px;"></div>
+            </div>
+
+            <div class="zone-container">
+                <div class="zone-card bubble-shadow">
+                    <h3>🏠 Common Areas</h3>
+                    <div class="room-grid">
+                        <div class="room-card card-kitchen" onclick="openRoom('Kitchen')">🍳 Kitchen</div>
+                        <div class="room-card card-living" onclick="openRoom('Living Room')">🛋️ Living Room</div>
+                        <div class="room-card card-dining" onclick="openRoom('Dining Area')">🍽️ Dining Area</div>
+                        <div class="room-card card-computer" onclick="openRoom('Computer Area')">💻 Computer Area</div>
+                    </div>
+                </div>
+
+                <div class="zone-card bubble-shadow">
+                    <h3>✨ Personal Spaces</h3>
+                    <div class="room-grid">
+                        <div class="room-card card-master" onclick="openRoom('Master Bedroom')">🛏️ Master Bed</div>
+                        <div class="room-card card-master-bath" onclick="openRoom('Master Bath')">🛁 Master Bath</div>
+                        <div class="room-card card-summer" onclick="openRoom('Summer Bedroom')">☀️ Summer Bed</div>
+                        <div class="room-card card-summer-bath" onclick="openRoom('Summer Bath')">🫧 Summer Bath</div>
+                        <div class="room-card card-kirsten" onclick="openRoom('Kirsten Bed')">🎨 Kirsten Bed</div>
+                        <div class="room-card card-girls-bath" onclick="openRoom('Girls Bath')">🧼 Kirsten & Hailey Bath</div>
+                        <div class="room-card card-hailey" onclick="openRoom('Hailey Bed')">🦄 Hailey Bed</div>
+                    </div>
+                </div>
+
+                <div class="zone-card bubble-shadow">
+                    <h3>🌳 Utility & Yard</h3>
+                    <div class="room-grid">
+                        <div class="room-card card-laundry" onclick="openRoom('Laundry Room')">🧺 Laundry</div>
+                        <div class="room-card card-entry" onclick="openRoom('Entrance')">🚪 Entrance</div>
+                        <div class="room-card card-outdoor" onclick="openRoom('Outdoor')">🌳 Outdoors</div>
+                        <div class="room-card card-garage" onclick="openRoom('Garage')">🚗 Garage</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="room-view" style="display:none;">
+            <div class="room-header-v2 bubble-shadow">
+                <button class="btn-circle" onclick="showHome()">⬅</button>
+                <h2 id="current-room-name" class="bubbly-room-name">Room Name</h2>
+            </div>
+            <button class="btn-add-magic-v2 bubble-shadow" onclick="openAddModal()">🚀 Add Magic Task</button>
+            
+            <p class="bubbly-section-label">NEEDS MAGIC 🚩</p>
+            <div id="task-list-red" class="compact-grid"></div>
+            <p class="bubbly-section-label" style="margin-top:30px;">PLANNED 🗓️</p>
+            <div id="task-list-green" class="compact-grid"></div>
+        </div>
+
+        <div id="stats-view" style="display:none;">
+            <div class="hall-header bubble-shadow">
+                <button class="btn-circle" onclick="showHome()">⬅</button>
+                <h1>Hall of Fame 🏆</h1>
+            </div>
+            
+            <div id="leaderboard" class="stats-card-v2 bubble-shadow"></div>
+
+            <h3 class="log-title">30-DAY MAGIC LOG 📜</h3>
+            <div id="activity-log" class="log-card bubble-shadow"></div>
+        </div>
+
+        <div id="history-view" style="display:none;">
+            <div class="hall-header bubble-shadow" style="border-color: var(--secondary); background: #f0fafa;">
+                <button class="btn-circle" onclick="closeUserDetail()">⬅</button>
+                <h1 id="detail-title" style="color: var(--secondary) !important;">Magic History</h1>
+            </div>
+            
+            <div id="user-history-log" class="bubbly-log-container"></div>
+            
+            <button class="btn-add-magic-v2 bubble-shadow" style="margin-top: 20px; background: var(--secondary);" onclick="closeUserDetail()">BACK TO STATS</button>
+        </div>
+    </div>
+
+    <div id="task-modal" class="modal" style="display:none;">
+        <div class="modal-content bubble-shadow mission-modal-v1">
+            <h3 id="modal-title" class="bubbly-modal-title">Mission Control</h3>
+            
+            <div class="custom-input-zone">
+                <input type="hidden" id="edit-task-id">
+                <input type="text" id="new-task-name" class="bubble-input-styled" placeholder="Task Name...">
+                <div class="freq-box bubble-shadow">
+                    <label>HOW OFTEN?</label>
+                    <select id="freq-type" class="bubble-input" onchange="updateFreqUI()">
+                        <option value="anytime">Anytime Bonus</option>
+                        <option value="days">Every X Days</option>
+                        <option value="weekly">Every Week (Pick Day)</option>
+                        <option value="monthly">Every X Months</option>
+                    </select>
+                    <div id="ui-num" style="display:none;"><input type="number" id="freq-num" class="bubble-input" placeholder="Enter number..."></div>
+                    <div id="ui-weekly" style="display:none;">
+                        <select id="freq-day" class="bubble-input">
+                            <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option>
+                            <option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="checkbox-row"><input type="checkbox" id="start-overdue"><label>🚩 Start Red?</label></div>
+            </div>
+            <div class="modal-buttons-v2">
+                <button class="btn-cancel bubble-close" onclick="closeModal()">CLOSE</button>
+                <button class="btn-save bubbly-save-v2" onclick="saveNewTask()">SAVE MISSION</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOvth6P7yNrKG8a4oIT2abou-AY6Y8r3g",
+            authDomain: "thehopehome-6c035.firebaseapp.com",
+            databaseURL: "https://thehopehome-6c035-default-rtdb.firebaseio.com",
+            projectId: "thehopehome-6c035",
+            storageBucket: "thehopehome-6c035.firebasestorage.app",
+            messagingSenderId: "242331628718",
+            appId: "1:242331628718:web:77312c0d5c6ae252fb693f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
