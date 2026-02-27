@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Hope Home 🌈</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div id="login-overlay" class="modal" style="display:flex;">
+        <div class="modal-content bubble-shadow login-box">
+            <h1 style="color: var(--primary); margin-bottom: 5px;">The Hope Home</h1>
+            <p style="color: var(--secondary); font-weight: bold;">Who's Magic Today? ✨</p>
+            <div class="login-grid">
+                <button class="login-btn" onclick="selectUser('Sarah', '👑')">Sarah 👑</button>
+                <button class="login-btn" onclick="selectUser('Shawn', '🛠️')">Shawn 🛠️</button>
+                <button class="login-btn" onclick="selectUser('Summer', '☀️')">Summer ☀️</button>
+                <button class="login-btn" onclick="selectUser('Kirsten', '🎨')">Kirsten 🎨</button>
+                <button class="login-btn" onclick="selectUser('Hailey', '🦄')">Hailey 🦄</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" style="display:none;">
+        <div class="user-bar bubble-shadow" onclick="logout()">
+            <label>✨ Hero: <strong id="active-user-display">None</strong></label>
+            <span style="font-size: 0.7rem; color: var(--primary); display: block;">(Tap to change)</span>
+        </div>
+
+        <div id="home-view">
+            <header class="hero-header">
+                <h1>The Hope Home</h1>
+                <p>Making Magic Happen! ✨</p>
+            </header>
+
+            <button class="btn-stats" onclick="showStats()">🏆 30-Day Hall of Fame</button>
+
+            <div class="global-actions bubble-shadow">
+                <h3>Global Quest Mode 🚀</h3>
+                <div class="global-input-row">
+                    <input type="text" id="global-keyword" placeholder="Type: Trash, Dust...">
+                    <button class="power-btn" onclick="completeGlobalQuest()">GO!</button>
+                </div>
+            </div>
+
+            <div class="room-grid">
+                <div class="room-card card-kitchen" onclick="openRoom('Kitchen')">🍳 Kitchen</div>
+                <div class="room-card card-living" onclick="openRoom('Living Room')">🛋️ Living</div>
+                <div class="room-card card-bed" onclick="openRoom('Bedrooms')">🛏️ Bedrooms</div>
+                <div class="room-card card-bath" onclick="openRoom('Bathrooms')">🛁 Bath</div>
+                <div class="room-card card-dining" onclick="openRoom('Dining Area')">🍽️ Dining</div>
+                <div class="room-card card-entry" onclick="openRoom('Entrance')">🚪 Entrance</div>
+                <div class="room-card card-laundry" onclick="openRoom('Laundry Room')">🧺 Laundry</div>
+            </div>
+        </div>
+
+        <div id="room-view" style="display:none;">
+            <div class="room-header">
+                <button class="btn-circle" onclick="showHome()">⬅</button>
+                <h2 id="current-room-name">Room Name</h2>
+            </div>
+            <button class="btn-add-hero" onclick="openAddModal()">🚀 Add Magic Task</button>
+            <div id="task-list"></div>
+        </div>
+
+        <div id="stats-view" style="display:none;">
+            <div class="room-header">
+                <button class="btn-circle" onclick="showHome()">⬅</button>
+                <h2>30-Day Trends</h2>
+            </div>
+            <div id="leaderboard" class="bubble-shadow stats-container"></div>
+            <h3 style="text-align: center; color: var(--primary);">Recent Activity 📜</h3>
+            <div id="activity-log" class="bubble-shadow stats-container"></div>
+        </div>
+    </div>
+
+    <div id="task-modal" class="modal" style="display:none;">
+        <div class="modal-content bubble-shadow">
+            <h3>Choose Your Mission</h3>
+            <div class="wheel-wrapper">
+                <button class="wheel-nav" onclick="scrollWheel(-1)">◀</button>
+                <div class="wheel-container" id="library-wheel"></div>
+                <button class="wheel-nav" onclick="scrollWheel(1)">▶</button>
+            </div>
+            
+            <div class="custom-input-zone">
+                <input type="text" id="new-task-name" placeholder="Quest name...">
+                
+                <div class="freq-selector-box">
+                    <label>How often?</label>
+                    <select id="freq-type" onchange="toggleFreqInput()">
+                        <option value="anytime">Anytime (Bonus Task)</option>
+                        <option value="days">Days</option>
+                        <option value="weeks">Weeks</option>
+                        <option value="months">Months</option>
+                    </select>
+                    
+                    <div id="freq-number-container" style="display:none; margin-top:10px;">
+                        <input type="number" id="new-task-freq" placeholder="Number of...">
+                    </div>
+                </div>
+
+                <div class="checkbox-row" style="justify-content: center; margin-top: 15px;">
+                    <input type="checkbox" id="start-overdue">
+                    <label for="start-overdue">Start as Overdue? 🚩</label>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn-save" onclick="saveNewTask()">SAVE</button>
+                <button class="btn-cancel" onclick="closeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOvth6P7yNrKG8a4oIT2abou-AY6Y8r3g",
+            authDomain: "thehopehome-6c035.firebaseapp.com",
+            databaseURL: "https://thehopehome-6c035-default-rtdb.firebaseio.com",
+            projectId: "thehopehome-6c035",
+            storageBucket: "thehopehome-6c035.firebasestorage.app",
+            messagingSenderId: "242331628718",
+            appId: "1:242331628718:web:77312c0d5c6ae252fb693f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
