@@ -139,4 +139,25 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margi
     justify-content: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
+
 .btn-delete-log:hover { background: #ff8585; }
+
+/* Mobile Fix for Search Bar Pop-out */
+@media (max-width: 600px) {
+    .global-input-row {
+        flex-direction: column; /* Stacks the Search button under the input on small screens */
+        align-items: center;
+    }
+
+    .global-input-row input {
+        width: 100%; /* Forces the box to respect the bubble boundaries */
+        max-width: none; /* Removes the 450px limit for small screens */
+        box-sizing: border-box; /* Ensures padding doesn't push it out */
+    }
+
+    .power-btn {
+        width: 100%; /* Makes the button easy to tap on mobile */
+        padding: 15px 0;
+        margin-top: 10px;
+    }
+}
